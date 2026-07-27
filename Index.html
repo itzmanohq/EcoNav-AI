@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EcoNav AI - Carbon Route Engine</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="splashScreen" class="container animate-fade" style="text-align: center; max-width: 420px;">
+    <h1 style="font-size: 2.2rem; margin-bottom: 15px;">🌱 EcoNav AI</h1>
+    <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6; margin-bottom: 30px;">
+        Next-generation green routing platform. Calculate precise trip emissions, bypass urban gridlock nodes, and monitor real-time carbon offsets.
+    </p>
+    <button onclick="showInputScreen()">Get Started</button>
+</div>
+
+<div id="inputScreen" class="container animate-fade" style="display: none;">
+    <h1>EcoNav Routing Engine</h1>
+
+    <div class="input-group">
+        <label for="start">Start Location</label>
+        <input id="start" placeholder="Type origin city..." autocomplete="off" oninput="fetchSuggestions(this, 'startSuggestions')">
+        <div id="startSuggestions" class="suggestions-box"></div>
+    </div>
+
+    <div class="input-group">
+        <label for="end">Destination Location</label>
+        <input id="end" placeholder="Type destination city..." autocomplete="off" oninput="fetchSuggestions(this, 'endSuggestions')">
+        <div id="endSuggestions" class="suggestions-box"></div>
+    </div>
+
+    <div class="input-group">
+        <label for="vehicle">Vehicle Category</label>
+        <select id="vehicle">
+            <option value="petrol">Petrol Car (Standard)</option>
+            <option value="diesel">Diesel Car (High Emission)</option>
+            <option value="bike">Motorcycle / Scooter</option>
+            <option value="ev">Electric Vehicle (Zero Tailpipe)</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label for="fuelPrice">Current Fuel Price (₹ / Litre)</label>
+        <input id="fuelPrice" type="number" value="103.50" step="0.1">
+    </div>
+
+    <button onclick="goToRoute()">Compute Analytical Tracks</button>
+</div>
+
+<script>
+    function showInputScreen() {
+        document.getElementById('splashScreen').style.display = 'none';
+        document.getElementById('inputScreen').style.display = 'block';
+    }
+
+    // High-speed, responsive autocomplete engine function
+    function fetchSuggestions(inputElem, boxId) {
+        const query = inputElem.value.trim();
+        const suggestionBox = document.getElementById(boxId);
+        
+        if (query.length < 2) {
+            suggestionBox.innerHTML = '';
+            return;
+        }
+
+        // Using a rapid-response global geocoding instance for instant suggestions
+        fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`)
+            .then(r => r.json())
+            .then(data => {
+                suggestionBox.innerHTML = '';
+                if(data.features) {
+                    data.features.forEach(feature => {
+                        const props = feature.properties;
+                        // Format beautifully: City, State/Country
+                        let nameParts = [props.name, props.city, props.state].filter(Boolean);
+                        let cleanName = nameParts.slice(0, 2).join(', ');
+
+                        let div = document.createElement('div');
+                        div.className = 'suggestion-item';
+                        div.innerText = cleanName;
+                        div.onclick = () => {
+                            inputElem.value = cleanName;
+                            suggestionBox.innerHTML = '';
+                        };
+                        suggestionBox.appendChild(div);
+                    });
+                }
+            }).catch(err => console.log("Engine network throttle bypass active."));
+    }
+
+    function goToRoute() {
+        const start = document.getElementById("start").value.trim();
+        const end = document.getElementById("end").value.trim();
+        const vehicle = document.getElementById("vehicle").value;
+        const fuelPrice = document.getElementById("fuelPrice").value || "103.50";
+
+        if (!start || !end) {
+            alert("Please input valid terminal points.");
+            return;
+        }
+
+        window.location.href = `route.html?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&vehicle=${vehicle}&fuelPrice=${fuelPrice}`;
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.matches('input')) {
+            document.querySelectorAll('.suggestions-box').forEach(b => b.innerHTML = '');
+        }
+    });
+</script>
+
+</body>
+</html>

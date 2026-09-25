@@ -1,91 +1,219 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>EcoNav AI - Carbon Route Engine</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoNav AI - Multi-Modal Commute & Carbon Planner</title>
+    <meta name="description" content="AI-Powered Multi-Modal Commute & Carbon Planner. Calculate precise trip emissions, evaluate international air corridors, and plan eco-friendly journeys.">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-<div id="splashScreen" class="container animate-fade" style="text-align: center; max-width: 420px;">
-    <h1 style="font-size: 2.2rem; margin-bottom: 15px;">🌱 EcoNav AI</h1>
-    <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6; margin-bottom: 30px;">
-        Next-generation green routing platform. Calculate precise trip emissions, bypass urban gridlock nodes, and monitor real-time carbon offsets.
-    </p>
-    <button onclick="showInputScreen()">Get Started</button>
+<div class="container animate-fade">
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 24px;">
+        <div style="display: inline-flex; align-items: center; justify-content: center; width: 58px; height: 58px; border-radius: 18px; background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(16, 185, 129, 0.2)); border: 1px solid rgba(56, 189, 248, 0.4); margin-bottom: 12px; font-size: 1.85rem; box-shadow: 0 0 25px rgba(56, 189, 248, 0.2);">
+            🌱
+        </div>
+        <h1 class="gradient-text" style="font-size: 1.9rem; margin-bottom: 4px;">EcoNav AI</h1>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;">
+            Multi-Modal Navigation, Satellite Analytics & Carbon Emission Matrix
+        </p>
+    </div>
+
+    <!-- Main Routing Form -->
+    <form id="routeForm" onsubmit="handleFormSubmit(event)">
+        <!-- Start Location -->
+        <div class="input-group">
+            <label for="start">
+                <i class="fa-solid fa-location-dot" style="color: #10b981; margin-right: 4px;"></i> Origin Location
+            </label>
+            <div class="input-wrapper">
+                <i class="fa-solid fa-circle-dot input-icon" style="color: #10b981;"></i>
+                <input id="start" placeholder="e.g., Chennai, India or New York..." autocomplete="off" required oninput="handleAutocomplete(this, 'startSuggestions')">
+            </div>
+            <div id="startSuggestions" class="suggestions-box" style="display: none;"></div>
+        </div>
+
+        <!-- Relative Swap Origin / Destination Button -->
+        <div style="position: relative; height: 10px; margin: -10px 0 10px 0;">
+            <button type="button" class="btn-swap" onclick="swapLocations()" title="Swap Origin & Destination">
+                <i class="fa-solid fa-arrow-down-up-across-line" style="font-size: 0.85rem;"></i>
+            </button>
+        </div>
+
+        <!-- Destination Location -->
+        <div class="input-group">
+            <label for="end">
+                <i class="fa-solid fa-flag-checkered" style="color: #38bdf8; margin-right: 4px;"></i> Destination Location
+            </label>
+            <div class="input-wrapper">
+                <i class="fa-solid fa-location-crosshairs input-icon" style="color: #38bdf8;"></i>
+                <input id="end" placeholder="e.g., London, UK or Paris..." autocomplete="off" required oninput="handleAutocomplete(this, 'endSuggestions')">
+            </div>
+            <div id="endSuggestions" class="suggestions-box" style="display: none;"></div>
+        </div>
+
+        <!-- Vehicle Category Selection -->
+        <div class="input-group">
+            <label for="vehicle">
+                <i class="fa-solid fa-sliders" style="margin-right: 4px;"></i> Primary Focus Mode
+            </label>
+            <div class="input-wrapper">
+                <i class="fa-solid fa-car-side input-icon" style="color: var(--neon-indigo);"></i>
+                <select id="vehicle">
+                    <option value="multimodal" selected>⚡ Multi-Modal AI (Air, Rail, Road & EV)</option>
+                    <option value="petrol">🚗 Petrol Car (Standard ICE)</option>
+                    <option value="diesel">🚙 Diesel Car (High NOx/PM)</option>
+                    <option value="ev">🔋 Electric Vehicle (Zero Tailpipe)</option>
+                    <option value="bike">🛵 Motorcycle / Scooter</option>
+                    <option value="transit">🚆 High-Speed Rail & Transit Priority</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Fuel / Electricity Configuration -->
+        <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-bottom: 22px;">
+            <div>
+                <label for="fuelPrice">
+                    <i class="fa-solid fa-gas-pump" style="margin-right: 4px;"></i> Energy / Fuel Price
+                </label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-tag input-icon" style="font-size: 0.85rem;"></i>
+                    <input id="fuelPrice" type="number" value="103.50" step="0.5" min="1">
+                </div>
+            </div>
+            <div>
+                <label for="currency">
+                    <i class="fa-solid fa-coins" style="margin-right: 4px;"></i> Currency
+                </label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-wallet input-icon" style="font-size: 0.85rem;"></i>
+                    <select id="currency">
+                        <option value="INR" selected>₹ INR</option>
+                        <option value="USD">$ USD</option>
+                        <option value="EUR">€ EUR</option>
+                        <option value="GBP">£ GBP</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn-primary" id="submitBtn">
+            <i class="fa-solid fa-compass"></i> Compute Multi-Modal Routes
+        </button>
+    </form>
+
+    <!-- Demonstration Presets -->
+    <div class="preset-container">
+        <div class="preset-title">
+            <span>✨ Demonstration Scenarios</span>
+            <span style="color: var(--neon-emerald); font-weight: 700;">Zero Ocean-Crossing Errors</span>
+        </div>
+        <div class="preset-grid">
+            <div class="preset-chip" onclick="setPreset('Chennai, India', 'London, UK', 'multimodal')">
+                <span>✈️</span> Chennai ➔ London
+            </div>
+            <div class="preset-chip" onclick="setPreset('New York, USA', 'Paris, France', 'multimodal')">
+                <span>✈️</span> New York ➔ Paris
+            </div>
+            <div class="preset-chip" onclick="setPreset('Tokyo, Japan', 'Sydney, Australia', 'multimodal')">
+                <span>✈️</span> Tokyo ➔ Sydney
+            </div>
+            <div class="preset-chip" onclick="setPreset('Chennai, India', 'Bengaluru, India', 'ev')">
+                <span>⚡</span> Chennai ➔ Bengaluru
+            </div>
+            <div class="preset-chip" onclick="setPreset('London, UK', 'Paris, France', 'transit')">
+                <span>🚆</span> London ➔ Paris
+            </div>
+            <div class="preset-chip" onclick="setPreset('San Francisco, USA', 'Honolulu, USA', 'multimodal')">
+                <span>🌴</span> SF ➔ Honolulu
+            </div>
+        </div>
+    </div>
 </div>
 
-<div id="inputScreen" class="container animate-fade" style="display: none;">
-    <h1>EcoNav Routing Engine</h1>
-
-    <div class="input-group">
-        <label for="start">Start Location</label>
-        <input id="start" placeholder="Type origin city..." autocomplete="off" oninput="fetchSuggestions(this, 'startSuggestions')">
-        <div id="startSuggestions" class="suggestions-box"></div>
-    </div>
-
-    <div class="input-group">
-        <label for="end">Destination Location</label>
-        <input id="end" placeholder="Type destination city..." autocomplete="off" oninput="fetchSuggestions(this, 'endSuggestions')">
-        <div id="endSuggestions" class="suggestions-box"></div>
-    </div>
-
-    <div class="input-group">
-        <label for="vehicle">Vehicle Category</label>
-        <select id="vehicle">
-            <option value="petrol">Petrol Car (Standard)</option>
-            <option value="diesel">Diesel Car (High Emission)</option>
-            <option value="bike">Motorcycle / Scooter</option>
-            <option value="ev">Electric Vehicle (Zero Tailpipe)</option>
-        </select>
-    </div>
-
-    <div class="input-group">
-        <label for="fuelPrice">Current Fuel Price (₹ / Litre)</label>
-        <input id="fuelPrice" type="number" value="103.50" step="0.1">
-    </div>
-
-    <button onclick="goToRoute()">Compute Analytical Tracks</button>
-</div>
-
+<script src="js/airports-data.js"></script>
+<script src="js/geo-engine.js"></script>
 <script>
-    function showInputScreen() {
-        document.getElementById('splashScreen').style.display = 'none';
-        document.getElementById('inputScreen').style.display = 'block';
-    }
+    let debounceTimer = null;
 
-    // High-speed, responsive autocomplete engine function
-    function fetchSuggestions(inputElem, boxId) {
+    function handleAutocomplete(inputElem, boxId) {
+        clearTimeout(debounceTimer);
         const query = inputElem.value.trim();
-        const suggestionBox = document.getElementById(boxId);
-        
+        const box = document.getElementById(boxId);
+
         if (query.length < 2) {
-            suggestionBox.innerHTML = '';
+            box.innerHTML = '';
+            box.style.display = 'none';
             return;
         }
 
-        // Using a rapid-response global geocoding instance for instant suggestions
-        fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`)
-            .then(r => r.json())
-            .then(data => {
-                suggestionBox.innerHTML = '';
-                if(data.features) {
-                    data.features.forEach(feature => {
-                        const props = feature.properties;
-                        // Format beautifully: City, State/Country
-                        let nameParts = [props.name, props.city, props.state].filter(Boolean);
-                        let cleanName = nameParts.slice(0, 2).join(', ');
+        debounceTimer = setTimeout(async () => {
+            box.innerHTML = '';
+            const lower = query.toLowerCase();
+            const matches = [];
 
-                        let div = document.createElement('div');
-                        div.className = 'suggestion-item';
-                        div.innerText = cleanName;
-                        div.onclick = () => {
-                            inputElem.value = cleanName;
-                            suggestionBox.innerHTML = '';
-                        };
-                        suggestionBox.appendChild(div);
+            // 1. Check local dictionary first
+            if (typeof GeoEngine !== 'undefined' && GeoEngine.POPULAR_CITIES) {
+                for (const [key, val] of Object.entries(GeoEngine.POPULAR_CITIES)) {
+                    if (key.includes(lower) || val.name.toLowerCase().includes(lower)) {
+                        matches.push(val.name);
+                    }
+                }
+            }
+
+            // 2. Query Open-Meteo & Komoot online
+            try {
+                const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`);
+                const data = await res.json();
+                if (data && data.results) {
+                    data.results.forEach(r => {
+                        const name = [r.name, r.admin1, r.country].filter(Boolean).join(', ');
+                        if (!matches.includes(name)) matches.push(name);
                     });
                 }
-            }).catch(err => console.log("Engine network throttle bypass active."));
+            } catch (e) {}
+
+            if (matches.length > 0) {
+                matches.slice(0, 6).forEach(cleanName => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.innerHTML = `<i class="fa-solid fa-location-dot" style="color: #38bdf8; font-size: 0.8rem;"></i> <span>${cleanName}</span>`;
+                    item.onclick = () => {
+                        inputElem.value = cleanName;
+                        box.innerHTML = '';
+                        box.style.display = 'none';
+                    };
+                    box.appendChild(item);
+                });
+                box.style.display = 'block';
+            } else {
+                box.style.display = 'none';
+            }
+        }, 180);
+    }
+
+    function swapLocations() {
+        const start = document.getElementById('start');
+        const end = document.getElementById('end');
+        const temp = start.value;
+        start.value = end.value;
+        end.value = temp;
+    }
+
+    function setPreset(startVal, endVal, vehicleVal) {
+        document.getElementById('start').value = startVal;
+        document.getElementById('end').value = endVal;
+        if (vehicleVal) document.getElementById('vehicle').value = vehicleVal;
+        goToRoute();
+    }
+
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        goToRoute();
     }
 
     function goToRoute() {
@@ -93,18 +221,34 @@
         const end = document.getElementById("end").value.trim();
         const vehicle = document.getElementById("vehicle").value;
         const fuelPrice = document.getElementById("fuelPrice").value || "103.50";
+        const currency = document.getElementById("currency").value || "INR";
 
         if (!start || !end) {
-            alert("Please input valid terminal points.");
+            alert("Please input both origin and destination locations.");
             return;
         }
 
-        window.location.href = `route.html?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&vehicle=${vehicle}&fuelPrice=${fuelPrice}`;
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Synthesizing Corridors...`;
+        submitBtn.disabled = true;
+
+        const params = new URLSearchParams({
+            start: start,
+            end: end,
+            vehicle: vehicle,
+            fuelPrice: fuelPrice,
+            currency: currency
+        });
+
+        window.location.href = `route.html?${params.toString()}`;
     }
 
     document.addEventListener('click', function(e) {
-        if (!e.target.matches('input')) {
-            document.querySelectorAll('.suggestions-box').forEach(b => b.innerHTML = '');
+        if (!e.target.closest('.input-group')) {
+            document.querySelectorAll('.suggestions-box').forEach(b => {
+                b.innerHTML = '';
+                b.style.display = 'none';
+            });
         }
     });
 </script>
